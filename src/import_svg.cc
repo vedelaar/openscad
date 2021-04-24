@@ -94,6 +94,7 @@ Polygon2d *import_svg(const std::string &filename, const double dpi, const bool 
 		Eigen::Vector2d align{0.0, 0.0};
 		Eigen::Vector2d viewbox{0.0, 0.0};
 
+		// Find the page
 		for (const auto& shape_ptr : *shapes) {
 			const auto page = dynamic_cast<libsvg::svgpage *>(shape_ptr.get());
 			if (page) {
@@ -129,8 +130,29 @@ Polygon2d *import_svg(const std::string &filename, const double dpi, const bool 
 								 calc_alignment(alignment.y, height_mm, scale.y(), page->get_viewbox().height);
 					}
 				}
+				break;
 			}
+		}
 
+		// Search the layer we want to show
+		std::vector<shared_ptr<libsvg::shape>> layers_vector;
+		auto* layers = &layers_vector;
+        if (layername == "") {
+			layers = shapes;
+		} else {
+			for (const auto& shape_ptr : *shapes) {
+				libsvg::shape* p = shape_ptr.get();
+				do {
+					LOG(message_group::None,Location::NONE,"","ADEV Checking %2$s matches with %1$s",layername,p->get_id());
+					if (p->get_id() == layername) {
+						layers->push_back(shape_ptr);
+					}
+				} while ((p = p->get_parent()) != nullptr);
+			}
+        }
+
+		// This is used for the center=true var
+		for (const auto& shape_ptr : *layers) {
 			const auto& s = *shape_ptr;
 			for (const auto& p : s.get_path_list()) {
 				for (const auto& v : p) {
@@ -141,33 +163,23 @@ Polygon2d *import_svg(const std::string &filename, const double dpi, const bool 
 		double cx = center ? bbox.center().x() : -align.x();
 		double cy = center ? bbox.center().y() : height_mm - align.y();
 
+		// Create the polygons
 		std::vector<const Polygon2d*> polygons;
-		for (const auto& shape_ptr : *shapes) {
-			bool show = false;
-			if (layername != "") {
-				libsvg::shape* p = shape_ptr.get();
-				do {
-					LOG(message_group::Error,Location::NONE,"","ADEV Checking %2$s matches with %1$s",layername,p->get_id());
-					if (p->get_id() == layername)
-						show = true;
-				} while ((p = p->get_parent()) != nullptr);
-			}
-			if (layername == "" || show) {
-				Polygon2d *poly = new Polygon2d();
-				const auto& s = *shape_ptr;
-				for (const auto& p : s.get_path_list()) {
-					Outline2d outline;
-					for (const auto& v : p) {
-						double x = scale.x() * (-viewbox.x() + v.x()) - cx;
-						double y = scale.y() * (-viewbox.y() - v.y()) + cy;
-						outline.vertices.push_back(Vector2d(x, y));
-						outline.positive = true;
-					}
-					poly->addOutline(outline);
+		for (const auto& shape_ptr : *layers) {
+			Polygon2d *poly = new Polygon2d();
+			const auto& s = *shape_ptr;
+			for (const auto& p : s.get_path_list()) {
+				Outline2d outline;
+				for (const auto& v : p) {
+					double x = scale.x() * (-viewbox.x() + v.x()) - cx;
+					double y = scale.y() * (-viewbox.y() - v.y()) + cy;
+					outline.vertices.push_back(Vector2d(x, y));
+					outline.positive = true;
 				}
-
-				polygons.push_back(poly);
+				poly->addOutline(outline);
 			}
+
+			polygons.push_back(poly);
 		}
 		return ClipperUtils::apply(polygons, ClipperLib::ctUnion);
 	} catch (const std::exception& e) {
