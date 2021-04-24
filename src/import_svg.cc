@@ -80,7 +80,7 @@ double calc_alignment(const libsvg::align_t alignment, double page_mm, double sc
 
 }
 
-Polygon2d *import_svg(const std::string &filename, const double dpi, const bool center, const Location &loc)
+Polygon2d *import_svg(const std::string &filename, const double dpi, const bool center, const Location &loc, const std::string &layername)
 {
 	try {
 		const auto shapes = libsvg::libsvg_read_file(filename.c_str());
@@ -143,19 +143,31 @@ Polygon2d *import_svg(const std::string &filename, const double dpi, const bool 
 
 		std::vector<const Polygon2d*> polygons;
 		for (const auto& shape_ptr : *shapes) {
-			Polygon2d *poly = new Polygon2d();
-			const auto& s = *shape_ptr;
-			for (const auto& p : s.get_path_list()) {
-				Outline2d outline;
-				for (const auto& v : p) {
-					double x = scale.x() * (-viewbox.x() + v.x()) - cx;
-					double y = scale.y() * (-viewbox.y() - v.y()) + cy;
-					outline.vertices.push_back(Vector2d(x, y));
-					outline.positive = true;
-				}
-				poly->addOutline(outline);
+			bool show = false;
+			if (layername != "") {
+				libsvg::shape* p = shape_ptr.get();
+				do {
+					LOG(message_group::Error,Location::NONE,"","ADEV Checking %2$s matches with %1$s",layername,p->get_id());
+					if (p->get_id() == layername)
+						show = true;
+				} while ((p = p->get_parent()) != nullptr);
 			}
-			polygons.push_back(poly);
+			if (layername == "" || show) {
+				Polygon2d *poly = new Polygon2d();
+				const auto& s = *shape_ptr;
+				for (const auto& p : s.get_path_list()) {
+					Outline2d outline;
+					for (const auto& v : p) {
+						double x = scale.x() * (-viewbox.x() + v.x()) - cx;
+						double y = scale.y() * (-viewbox.y() - v.y()) + cy;
+						outline.vertices.push_back(Vector2d(x, y));
+						outline.positive = true;
+					}
+					poly->addOutline(outline);
+				}
+
+				polygons.push_back(poly);
+			}
 		}
 		return ClipperUtils::apply(polygons, ClipperLib::ctUnion);
 	} catch (const std::exception& e) {

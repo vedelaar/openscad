@@ -192,7 +192,7 @@ const Geometry *ImportNode::createGeometry() const
 		break;
 	}
 	case ImportType::SVG: {
-		g = import_svg(this->filename, this->dpi, this->center, loc);
+		g = import_svg(this->filename, this->dpi, this->center, loc, this->layername);
  		break;
 	}
 	case ImportType::DXF: {
