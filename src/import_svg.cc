@@ -83,6 +83,7 @@ double calc_alignment(const libsvg::align_t alignment, double page_mm, double sc
 Polygon2d *import_svg(const std::string &filename, const double dpi, const bool center, const Location &loc, const std::string &layername)
 {
 	try {
+		LOG(message_group::None,Location::NONE,"","ADEV Importing %1$s",filename);
 		const auto shapes = libsvg::libsvg_read_file(filename.c_str());
 
 		double width_mm = 0.0;
@@ -98,6 +99,7 @@ Polygon2d *import_svg(const std::string &filename, const double dpi, const bool 
 		for (const auto& shape_ptr : *shapes) {
 			const auto page = dynamic_cast<libsvg::svgpage *>(shape_ptr.get());
 			if (page) {
+		        LOG(message_group::None,Location::NONE,"","ADEV Found page %1$s",page->dump());
 				const auto w = page->get_width();
 				const auto h = page->get_height();
 				const auto alignment = page->get_alignment();
@@ -150,6 +152,7 @@ Polygon2d *import_svg(const std::string &filename, const double dpi, const bool 
 				} while ((p = p->get_parent()) != nullptr);
 			}
         }
+		LOG(message_group::None,Location::NONE,"","ADEV layers.size() %1$s",layers->size());
 
 		// This is used for the center=true var
 		for (const auto& shape_ptr : *layers) {
@@ -168,6 +171,7 @@ Polygon2d *import_svg(const std::string &filename, const double dpi, const bool 
 		for (const auto& shape_ptr : *layers) {
 			Polygon2d *poly = new Polygon2d();
 			const auto& s = *shape_ptr;
+			LOG(message_group::None,Location::NONE,"","ADEV s.get_path_list() %1$s for %2$s, with id: %3$s, dump: %4$s",s.get_path_list().size(), s.get_name(), s.get_id(), s.dump());
 			for (const auto& p : s.get_path_list()) {
 				Outline2d outline;
 				for (const auto& v : p) {
@@ -181,6 +185,7 @@ Polygon2d *import_svg(const std::string &filename, const double dpi, const bool 
 
 			polygons.push_back(poly);
 		}
+		LOG(message_group::None,Location::NONE,"","ADEV polygons.size() %1$s",polygons.size());
 		return ClipperUtils::apply(polygons, ClipperLib::ctUnion);
 	} catch (const std::exception& e) {
 		LOG(message_group::Error,Location::NONE,"","%1$s, import() at line %2$d",e.what(),loc.firstLine());
