@@ -186,7 +186,7 @@ void processNode(xmlTextReaderPtr reader, shapes_defs_list_t* defs_lookup_list, 
 int streamFile(const char *filename)
 {
 	xmlTextReaderPtr reader;
-    // The temp storage is needed for items in a def that don't have an id, but have a parent with an id
+	// The temp storage is needed for items in a def that don't have an id, but have a parent with an id
 	shapes_list_t temp_defs_storage;
 	shapes_defs_list_t defs_lookup_list;
 
