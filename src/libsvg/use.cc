@@ -52,7 +52,7 @@ use::set_attrs(attr_map_t& attrs)
 	this->height = parse_double(attrs["height"]);
 
 	std::string temp_href = attrs["href"];
-    if (attrs["href"].empty() && !attrs["xlink:href"].empty())
+	if (attrs["href"].empty() && !attrs["xlink:href"].empty())
 	{
 		temp_href = attrs["xlink:href"];
 	}
@@ -87,7 +87,7 @@ use::set_clone_child(shape* child)
 {
 	shape* copy = child->clone();
 	copy->set_parent(this);
-	auto cloned_objects = child->clone_children();
+	auto cloned_objects = copy->clone_children();
 	cloned_objects.insert(cloned_objects.begin(), std::shared_ptr<shape>(copy));
 	return cloned_objects;
 }
