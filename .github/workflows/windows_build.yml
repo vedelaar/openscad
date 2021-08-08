@@ -1,0 +1,44 @@
+name: windows build in windows  
+
+on:
+  workflow_dispatch:
+    inputs:
+      chosen_branch:
+        # Friendly description to be shown in the UI instead of 'name'
+        description: 'branch'
+        # Default value if no value is explicitly provided
+        default: 'master'
+        # Input has to be provided for the workflow to run
+        required: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.inputs.chosen_branch }}
+      - name: Setup MSYS2 Environment
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          #update: true
+      - name: Install MSYS2 Dependencies
+        run: |
+          pwd
+          ./scripts/msys2-install-dependencies.sh
+      - name: Build OpenSCAD
+        run: |
+          git submodule update --init --recursive
+          mkdir build && cd build
+          cmake .. -G"MSYS Makefiles" -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DEXPERIMENTAL=ON -DSNAPSHOT=ON
+          mingw32-make.exe -j2
+      - name: Upload build
+        uses: actions/upload-artifact@v2
+        with:
+          name: build_windows
+          path: .
