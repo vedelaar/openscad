@@ -36,7 +36,7 @@ jobs:
           git submodule update --init --recursive
           mkdir build && cd build
           cmake .. -G"MSYS Makefiles" -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DEXPERIMENTAL=ON -DSNAPSHOT=ON
-          mingw32-make.exe -j2
+          mingw64-make.exe -j2
       - name: Upload build
         uses: actions/upload-artifact@v2
         with:
