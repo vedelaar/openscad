@@ -1,0 +1,47 @@
+# This is a basic workflow that is manually triggered
+
+name: Windows build
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+  workflow_dispatch:
+    inputs:
+      chosen_branch:
+        # Friendly description to be shown in the UI instead of 'name'
+        description: 'branch'
+        # Default value if no value is explicitly provided
+        default: 'master'
+        # Input has to be provided for the workflow to run
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.inputs.chosen_branch }}
+    - name: Submodules
+      run: git submodule update --init --recursive
+    - name: Install dependencies for cross build
+      run: apt-get install autoconf automake autopoint bash bison bzip2 flex g++ g++-multilib gettext git gperf intltool libc6-dev-i386 libgdk-pixbuf2.0-dev libltdl-dev libssl-dev libtool-bin libxml-parser-perl lzip make openssl p7zip-full patch perl python ruby sed unzip wget xz-utils nsis
+    - name: Install dependencies
+      run: ./scripts/travis-ci-before-install-linux.sh bionic
+    - name: Dependency fixup
+      run: sudo apt-get install qt5-default gettext gcovr
+    - name: Get the cross compiler
+      run: bash -c "source ./scripts/setenv-mingw-xbuild.sh 64; ./scripts/release-common.sh mingw64"
+    - name: build
+      run: ./scripts/release-common.sh mingw64
+    - name: ls
+      run: ls
+    - name: tar
+      run: tar -zcvf build.tgz *
+    - name: Upload build
+      uses: actions/upload-artifact@v2
+      with:
+        name: build_windows_cross_compiled.tgz
+        path: build.tgz
