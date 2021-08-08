@@ -37,11 +37,11 @@ jobs:
           mkdir build && cd build
           cmake .. -G"MSYS Makefiles" -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DEXPERIMENTAL=ON -DSNAPSHOT=ON
           mingw64-make.exe -j2
-      - name: Upload build
-        uses: actions/upload-artifact@v2
-        with:
-          name: build_windows
-          path: .
+#      - name: Upload build
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: build_windows
+#          path: .
       - name: Upload build exe only
         uses: actions/upload-artifact@v2
         with:
