@@ -42,3 +42,8 @@ jobs:
         with:
           name: build_windows
           path: .
+      - name: Upload build exe only
+        uses: actions/upload-artifact@v2
+        with:
+          name: build_windows_exe
+          path: ./build/OpenSCAD.exe
