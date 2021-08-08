@@ -33,9 +33,9 @@ jobs:
     - name: Dependency fixup
       run: sudo apt-get install qt5-default gettext gcovr
     - name: Get the cross compiler
-      run: bash -c "source ./scripts/setenv-mingw-xbuild.sh 64; ./scripts/release-common.sh mingw64"
+      run: bash -c "source ./scripts/setenv-mingw-xbuild.sh 64; ./scripts/mingw-x-build-dependencies.sh 64"
     - name: build
-      run: ./scripts/release-common.sh mingw64
+      run: bash -c "source ./scripts/setenv-mingw-xbuild.sh 64; ./scripts/release-common.sh mingw64"
     - name: ls
       run: ls
     - name: tar
